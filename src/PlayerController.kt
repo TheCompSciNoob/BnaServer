@@ -9,14 +9,22 @@ class PlayerController(val playerSocket: Socket, val gameController: GameControl
 
     private fun Socket.configPlayer(): Unit = with(playerSocket) {
         on("MovePlayer") {
-            //TODO: check if player present, if not can move
-            //TODO: refresh all players when action completed
             if (gameController.entityInTurn === playerModel) {
-                respond(true)
-                playerModel.x = it.newX as Int
-                playerModel.y = it.newY as Int
-                broadcast.emit("UpdateGameState", gameController.gameState)
-            } else respond(false)
+                val newX: Int = it.newX
+                val newY: Int = it.newY
+                if (gameController.gameState.players.any { it.x == newX && it.y == newY } ||
+                        gameController.gameState.players.any { it.x == newX && it.y == newY }) {
+                    respond(false)
+                } else {
+                    respond(true)
+                    playerModel.x = it.newX as Int
+                    playerModel.y = it.newY as Int
+                    broadcast.emit("UpdateGameState", gameController.gameState)
+                }
+            } else {
+                respond(false)
+                emit("UpdateGameState", gameController.gameState)
+            }
         }
         on("UpdateGameState") {
             if (gameController.entityInTurn === playerModel) {
@@ -24,13 +32,19 @@ class PlayerController(val playerSocket: Socket, val gameController: GameControl
                 val gameStateJSON = it.gameStateJSON as String
                 gameController.gameState = JSON.parse(gameStateJSON)
                 broadcast.emit("UpdateGameState", gameStateJSON)
-            } else respond(false)
+            } else {
+                respond(false)
+                emit("UpdateGameState", gameController.gameState)
+            }
         }
         on("EndTurn") {
             if (gameController.entityInTurn === playerModel) {
                 respond(true)
                 gameController.nextTurn()
-            } else respond(false)
+            } else {
+                respond(false)
+                emit("UpdateGameState", gameController.gameState)
+            }
         }
     }
 

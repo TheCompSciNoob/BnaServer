@@ -50,16 +50,16 @@ class GameController(val dmSocket: Socket, gameStateJSON: String) {
     }
 
     fun nextTurn() {
-        if (combinedList.filter { it.health > 0 }.isEmpty()) {
-            dmSocket.emit("GameEnd")
-            dmSocket.broadcast.emit("GameEnd")
-        }
-        else {
+        if (combinedList.any { it.health > 0 }) {
             do {
                 turnPosition = (turnPosition + 1) % combinedList.size
             } while (entityInTurn.health <= 0)
             dmSocket.emit("NextTurn", entityInTurn, gameState)
             dmSocket.broadcast.emit("NextTurn", entityInTurn, gameState)
+        }
+        else {
+            dmSocket.emit("GameEnd")
+            dmSocket.broadcast.emit("GameEnd")
         }
     }
 }
