@@ -26,10 +26,6 @@ fun onPlayerJoined(socket: Socket): Unit = with(socket) {
             refreshRooms() //refresh rooms if the player is DM
         }
     }
-    on("TestEmit") {
-        val message = it.message //testing remove later
-        console.log("$id: $message")
-    }
     on("JoinAsDM") {
         //makes new room and joins the DM
         val roomName = "Room $id"
@@ -38,15 +34,22 @@ fun onPlayerJoined(socket: Socket): Unit = with(socket) {
         //gets GameState from the DM in form of String
         val jsonString = it.gameState as String
         gameControllers.add(GameController(this, jsonString))
+        emit("JoinedAsDM")
     }
     on("JoinAsPlayer") {
         val roomName = it.roomName as String
         val controller = gameControllers.find { it.roomName == roomName }
         controller?.joinPlayer(this) ?: emit("Join room failed", json("roomName" to roomName))
+        emit("JoinedAsPlayer")
     }
     on("RefreshRooms") {
         refreshRooms()
     }
+    //testing
+    on("TestEmit") {
+        val message = it.message //testing remove later
+        console.log("$id: $message")
+    }
 }
 
-fun Socket.refreshRooms() = broadcast.emit("RefreshRooms", json("rooms" to gameControllers.map { it.roomName }.toTypedArray()))
+private fun Socket.refreshRooms() = broadcast.emit("RefreshRooms", json("rooms" to gameControllers.map { it.roomName }.toTypedArray()))
