@@ -34,12 +34,14 @@ class GameController(val dmSocket: Socket, gameStateJSON: String) {
 
     private fun Socket.configDM() {
         on("disconnect") {
+            console.log("disconnect")
             dmSocket.broadcast.apply {
                 leave(roomName)
                 emit("DmDisconnected", json("roomName" to roomName))
             }
         }
         on("UpdateGameState") {
+            console.log("UpdateGameState")
             val gameStateJSON = it.gameStateJSON as String
             gameState = JSON.parse(gameStateJSON)
             broadcast.emit("UpdateGameState", gameState)

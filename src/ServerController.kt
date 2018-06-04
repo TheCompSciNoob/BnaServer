@@ -1,3 +1,5 @@
+import model.GameModel
+import model.GameState
 import kotlin.js.json
 
 val gameControllers = mutableListOf<GameController>()
@@ -28,21 +30,32 @@ fun onPlayerJoined(socket: Socket): Unit = with(socket) {
     }
     on("JoinAsDM") {
         //makes new room and joins the DM
+        console.log("JoinAsDM")
         val roomName = "Room $id"
         join(roomName)
         refreshRooms()
         //gets GameState from the DM in form of String
-        val jsonString = it.gameState as String
+//        val jsonString = it.gameState as String
+
+        val players = arrayOf(GameModel(1, 1, 1, 1), GameModel(2, 2, 2, 2))
+        val enemies = arrayOf(GameModel(3, 3, 3, 3), GameModel(4, 4, 4, 4))
+        val gs = GameState(players, enemies)
+        val jsonString = JSON.stringify(gs)
+
+        console.log(gs)
+
         gameControllers.add(GameController(this, jsonString))
         emit("JoinedAsDM")
     }
     on("JoinAsPlayer") {
+        console.log("JoinAsPlayer")
         val roomName = it.roomName as String
-        val controller = gameControllers.find { it.roomName == roomName }
-        controller?.joinPlayer(this) ?: emit("Join room failed", json("roomName" to roomName))
+//TODO        val controller = gameControllers.find { it.roomName == roomName }
+//TODO        controller?.joinPlayer(this) ?: emit("Join room failed", json("roomName" to roomName))
         emit("JoinedAsPlayer")
     }
     on("RefreshRooms") {
+        console.log("RefreshRooms")
         refreshRooms()
     }
     //testing

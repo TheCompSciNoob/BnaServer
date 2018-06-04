@@ -3,8 +3,10 @@
   <component name="Kotlin2JsCompilerArguments">
     <option name="moduleKind" value="commonjs" />
     <option name="sourceMap" value="true" />
-    <option name="sourceMapEmbedSources" />
-    <option name="sourceMapPrefix" />
+  </component>
+  <component name="KotlinCommonCompilerArguments">
+    <option name="apiVersion" value="1.2" />
+    <option name="languageVersion" value="1.2" />
   </component>
   <component name="KotlinCompilerSettings">
     <option name="outputDirectoryForJsLibraryFiles" value="node_modules" />

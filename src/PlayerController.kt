@@ -1,4 +1,5 @@
 import model.GameModel
+import kotlin.js.Console
 import kotlin.js.json
 
 class PlayerController(val playerSocket: Socket, val gameController: GameController, val playerModel: GameModel) {
@@ -9,6 +10,7 @@ class PlayerController(val playerSocket: Socket, val gameController: GameControl
 
     private fun Socket.configPlayer(): Unit = with(playerSocket) {
         on("MovePlayer") {
+            console.log("MovePlayer")
             if (gameController.entityInTurn === playerModel) {
                 val newX: Int = it.newX
                 val newY: Int = it.newY
@@ -20,6 +22,7 @@ class PlayerController(val playerSocket: Socket, val gameController: GameControl
                     playerModel.x = it.newX as Int
                     playerModel.y = it.newY as Int
                     broadcast.emit("UpdateGameState", gameController.gameState)
+                    console.log("Player position updated")
                 }
             } else {
                 respond(false)
@@ -27,6 +30,7 @@ class PlayerController(val playerSocket: Socket, val gameController: GameControl
             }
         }
         on("UpdateGameState") {
+            console.log("UpdateGameState")
             if (gameController.entityInTurn === playerModel) {
                 respond(true)
                 val gameStateJSON = it.gameStateJSON as String
@@ -38,6 +42,7 @@ class PlayerController(val playerSocket: Socket, val gameController: GameControl
             }
         }
         on("EndTurn") {
+            console.log("EndTurn")
             if (gameController.entityInTurn === playerModel) {
                 respond(true)
                 gameController.nextTurn()
