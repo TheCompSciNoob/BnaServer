@@ -1,60 +1,47 @@
 import model.GameModel
 import kotlin.js.Console
+import kotlin.js.JSON
+import kotlin.js.console
 import kotlin.js.json
 
-class PlayerController(val playerSocket: Socket, val gameController: GameController, val playerModel: GameModel) {
+class PlayerController(private val playerSocket: Socket, val gameController: GameController, val playerModel: GameModel) {
 
     init {
         playerSocket.configPlayer()
     }
 
     private fun Socket.configPlayer(): Unit = with(playerSocket) {
-        on("MovePlayer") {
+        on("UpdateSelfPosition") {
             console.log("MovePlayer")
-            if (gameController.entityInTurn === playerModel) {
-                val newX: Int = it.newX
-                val newY: Int = it.newY
-                if (gameController.gameState.players.any { it.x == newX && it.y == newY } ||
-                        gameController.gameState.players.any { it.x == newX && it.y == newY }) {
-                    respond(false)
-                } else {
-                    respond(true)
-                    playerModel.x = it.newX as Int
-                    playerModel.y = it.newY as Int
-                    broadcast.emit("UpdateGameState", gameController.gameState)
-                    console.log("Player position updated")
-                }
-            } else {
+            val newX = it.newX as Int
+            val newY = it.newY as Int
+            if (gameController.entitiesMap.any { it.second.x == newX && it.second.y == newY }) {
                 respond(false)
-                emit("UpdateGameState", gameController.gameState)
+                emit("PlayerGameStateUpdate", json("gameState" to gameController.gameState))
+            } else {
+                respond(true)
+                playerModel.x = newX
+                playerModel.y = newY
+                gameController.dmSocket.emit("DMGameStateUpdate", json("gameState" to gameController.gameState))
+                gameController.dmSocket.broadcast.emit("PlayerGameStateUpdate", json("gameState" to gameController.gameState))
+                console.log("Player position updated")
             }
         }
         on("UpdateGameState") {
             console.log("UpdateGameState")
-            if (gameController.entityInTurn === playerModel) {
-                respond(true)
-                val gameStateJSON = it.gameStateJSON as String
-                gameController.gameState = JSON.parse(gameStateJSON)
-                broadcast.emit("UpdateGameState", gameStateJSON)
-            } else {
-                respond(false)
-                emit("UpdateGameState", gameController.gameState)
-            }
+            val gameStateJSON = it.gameStateJSON as String
+            gameController.gameState = JSON.parse(gameStateJSON)
+            gameController.dmSocket.emit("DMGameStateUpdate", json("gameState" to gameController.gameState))
+            gameController.dmSocket.broadcast.emit("PlayerGameStateUpdate", json("gameState" to gameController.gameState))
         }
         on("EndTurn") {
             console.log("EndTurn")
-            if (gameController.entityInTurn === playerModel) {
-                respond(true)
-                gameController.nextTurn()
-            } else {
-                respond(false)
-                emit("UpdateGameState", gameController.gameState)
-            }
+            gameController.nextTurn()
         }
     }
 
     private fun Socket.respond(changeApproved: Boolean) {
         //responds to socket whether the action is approved
-        emit("response", json("changeApproved" to changeApproved))
+        emit("Response", json("changeApproved" to changeApproved))
     }
 }

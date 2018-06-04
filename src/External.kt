@@ -19,6 +19,8 @@ external class Socket {
     fun join(roomName: String)
 
     fun leave(roomName: String)
+
+    fun to(id: String): Socket
 }
 
 external fun require(module: String): dynamic
